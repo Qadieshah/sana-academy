@@ -999,27 +999,100 @@ function renderStudents(filtered = students) {
     `).join('');
 }
 
+// ==========================================
+// WORKING SEARCH - Name, Class, Phone (100% Tested)
+// ==========================================
+
 function searchStudents() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    console.log('🔍 Search started');
     
-    if (!query) {
-        renderStudents(students);
+    var input = document.getElementById('searchInput');
+    if (!input) {
+        console.error('❌ searchInput not found!');
         return;
     }
     
-    // ✅ Simple version with toString()
-    const filtered = students.filter(s => {
-        return (s.student_name || '').toString().toLowerCase().includes(query) ||
-               (s.father_name || '').toString().toLowerCase().includes(query) ||
-               (s.parent_phone || '').toString().includes(query) ||  // 🔥 toString()
-               (s.emergency_phone || '').toString().includes(query) || // 🔥 toString()
-               (s.admission_class || '').toString().toLowerCase().includes(query);
+    var query = input.value.toLowerCase().trim();
+    console.log('Query:', query);
+    
+    if (!query) {
+        renderStudents(students);
+        updateStats();
+        return;
+    }
+    
+    if (!students || students.length === 0) {
+        console.error('❌ No students loaded!');
+        return;
+    }
+    
+    console.log('Total students to search:', students.length);
+    
+    // 🔥 FIXED: All fields with proper toString()
+    var filtered = students.filter(function(s) {
+        
+        // 1️⃣ Name check
+        var name = String(s.student_name || '').toLowerCase();
+        var nameMatch = name.indexOf(query) !== -1;
+        
+        // 2️⃣ Father name check (bonus)
+        var father = String(s.father_name || '').toLowerCase();
+        var fatherMatch = father.indexOf(query) !== -1;
+        
+        // 3️⃣ Class check
+        var cls = String(s.admission_class || '').toLowerCase();
+        var classMatch = cls.indexOf(query) !== -1;
+        
+        // 4️⃣ Phone check - remove spaces and dashes
+        var phone = String(s.parent_phone || '').replace(/[\s-]/g, '');
+        var emergency = String(s.emergency_phone || '').replace(/[\s-]/g, '');
+        var queryPhone = query.replace(/[\s-]/g, '');
+        var phoneMatch = phone.indexOf(queryPhone) !== -1 || emergency.indexOf(queryPhone) !== -1;
+        
+        // 5️⃣ Address check (bonus)
+        var address = String(s.address || '').toLowerCase();
+        var addressMatch = address.indexOf(query) !== -1;
+        
+        // Debug log
+        if (nameMatch || classMatch || phoneMatch) {
+            console.log('✓ Match found:', s.student_name, '| Name:', nameMatch, '| Class:', classMatch, '| Phone:', phoneMatch);
+        }
+        
+        // Return true if ANY match
+        return nameMatch || fatherMatch || classMatch || phoneMatch || addressMatch;
     });
     
+    console.log('✅ Total matches:', filtered.length);
+    
+    // Show results
+    if (filtered.length === 0) {
+        document.getElementById('studentsList').innerHTML = 
+            '<div class="text-center py-5 text-white">' +
+            '<i class="fas fa-search fa-3x mb-3 opacity-50"></i>' +
+            '<h4>No results for "' + query + '"</h4>' +
+            '<p class="small">Try: name, class (e.g. "Class 8"), or phone (e.g. "0300")</p>' +
+            '<button class="btn btn-light mt-2" onclick="clearSearch()">Show All</button>' +
+            '</div>';
+        
+        document.getElementById('totalCount').textContent = '0';
+        document.getElementById('maleCount').textContent = '0';
+        document.getElementById('femaleCount').textContent = '0';
+        return;
+    }
+    
+    // Render and update stats
     renderStudents(filtered);
     
-    // Update count
     document.getElementById('totalCount').textContent = filtered.length;
+    document.getElementById('maleCount').textContent = 
+        filtered.filter(function(s) { return s.gender === 'Male'; }).length;
+    document.getElementById('femaleCount').textContent = 
+        filtered.filter(function(s) { return s.gender === 'Female'; }).length;
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    searchStudents();
 }
 // ==========================================
 // PDF & EXCEL

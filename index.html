@@ -1004,7 +1004,7 @@ function searchStudents() {
     const filtered = students.filter(s => 
         s.student_name?.toLowerCase().includes(query) ||
         s.admission_class?.toLowerCase().includes(query) ||
-        s.parent_phone?.includes(query)
+        s.parent_phone?.toString().includes(query)
     );
     renderStudents(filtered);
 }

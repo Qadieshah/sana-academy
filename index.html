@@ -1000,28 +1000,27 @@ function renderStudents(filtered = students) {
 }
 
 function searchStudents() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = students.filter(s => 
-        s.student_name?.toLowerCase().includes(query) ||
-        s.admission_class?.toLowerCase().includes(query) ||
-        s.parent_phone?.toString().includes(query)
-    );
-    renderStudents(filtered);
-}
-
-function viewStudent(id) {
-    const student = students.find(s => s.id == id);
-    if(!student) return;
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
     
-    alert(`📋 Student Details:\n\n` +
-          `Name: ${student.student_name}\n` +
-          `Father: ${student.father_name}\n` +
-          `Class: ${student.admission_class}\n` +
-          `Phone: ${student.parent_phone}\n` +
-          `Address: ${student.address}\n` +
-          `Emergency: ${student.emergency_name} - ${student.emergency_phone}`);
+    if (!query) {
+        renderStudents(students);
+        return;
+    }
+    
+    // ✅ Simple version with toString()
+    const filtered = students.filter(s => {
+        return (s.student_name || '').toString().toLowerCase().includes(query) ||
+               (s.father_name || '').toString().toLowerCase().includes(query) ||
+               (s.parent_phone || '').toString().includes(query) ||  // 🔥 toString()
+               (s.emergency_phone || '').toString().includes(query) || // 🔥 toString()
+               (s.admission_class || '').toString().toLowerCase().includes(query);
+    });
+    
+    renderStudents(filtered);
+    
+    // Update count
+    document.getElementById('totalCount').textContent = filtered.length;
 }
-
 // ==========================================
 // PDF & EXCEL
 // ==========================================
